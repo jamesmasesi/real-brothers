@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block title %}Manage Members{% endblock %}
+{% block content %}
+<h1 class="page-title">Manage Members</h1>
+<p class="page-sub">{{ members|length }} total registrations</p>
+
+<div style="display:grid; grid-template-columns:1fr 2fr; gap:24px; align-items:start;">
+  <!-- ADD MEMBER FORM -->
+  <div class="card">
+    <div class="card-header"><span class="card-title">Add New Member</span></div>
+    <form method="POST">
+      <input type="hidden" name="action" value="add">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" name="name" class="form-control" required placeholder="e.g. John Kamau">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" class="form-control" required placeholder="e.g. johnk">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Joined Year</label>
+        <select name="joined_year" class="form-control">
+          <option value="2023">2023 (Pioneer)</option>
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Initial Status</label>
+        <select name="status" class="form-control">
+          <option value="active" selected>Active</option>
+          <option value="dormant">Dormant</option>
+          <option value="exited">Left</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="text" name="password" class="form-control" value="brothers2024">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;">Add Member →</button>
+    </form>
+  </div>
+
+  <!-- CATEGORIZED MEMBER LISTS -->
+  <div style="display:flex; flex-direction:column; gap:24px;">
+    
+    <!-- ACTIVE MEMBERS -->
+    <div class="card" style="border-top: 4px solid var(--green);">
+      <div class="card-header"><span class="card-title">Active Members</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Joined</th><th>Name</th><th>Status Action</th><th>Special</th><th>Actions</th></tr></thead>
+          <tbody>
+          {% for m in members if m.status == 'active' %}
+          <tr>
+            <td style="font-size:12px; color:var(--gray);">{{ m.joined_year }}</td>
+            <td style="font-weight:500;">
+              <span id="name-display-{{ m.id }}">{{ m.name }}</span>
+              <button onclick="toggleEdit({{ m.id }}, true)" class="btn-edit-icon" style="background:none; border:none; color:var(--gray); cursor:pointer; font-size:10px; margin-left:4px;">✎</button>
+              <form method="POST" id="edit-form-{{ m.id }}" style="display:none; align-items:center; gap:4px; margin-top:4px;">
+                <input type="hidden" name="action" value="edit_name">
+                <input type="hidden" name="member_id" value="{{ m.id }}">
+                <input type="text" name="name" value="{{ m.name }}" class="form-control" style="padding:2px 6px; font-size:12px; height:24px;">
+                <button type="submit" class="btn btn-sm btn-primary" style="padding:2px 6px; font-size:10px;">Save</button>
+                <button type="button" onclick="toggleEdit({{ m.id }}, false)" class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:10px;">✕</button>
+              </form>
+            </td>
+            <td>
+              <form method="POST" style="display:inline;">
+                <input type="hidden" name="action" value="status">
+                <input type="hidden" name="member_id" value="{{ m.id }}">
+                <select name="status" onchange="this.form.submit()" class="form-control" style="padding:4px 8px; font-size:11px; width:auto; height:28px;">
+                  <option value="active" selected>Active</option>
+                  <option value="dormant">Set Dormant</option>
+                  <option value="exited">Set Left</option>
+                </select>
+              </form>
+            </td>
+            <td>
+               <form method="POST" style="display:inline;">
+                <input type="hidden" name="action" value="toggle_special">
+                <input type="hidden" name="member_id" value="{{ m.id }}">
+                <button type="submit" class="btn btn-sm {{ 'btn-primary' if m.is_special else 'btn-secondary' }}" style="padding:2px 6px; font-size:10px;">{{ 'SPECIAL' if m.is_special else 'Normal' }}</button>
+              </form>
+            </td>
+            <td>
+              <div style="display:flex; gap:4px;">
+                {% if not m.dowry_received %}
+                <form method="POST" style="display:inline;">
+                  <input type="hidden" name="action" value="dowry_received">
+                  <input type="hidden" name="member_id" value="{{ m.id }}">
+                  <button type="submit" class="btn btn-sm" style="background:#FEF3C7; color:#92400E; padding:4px 8px;" title="Mark Dowry Received">💍</button>
+                </form>
+                {% else %}
+                <span class="badge badge-gold">Paid</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DORMANT MEMBERS -->
+    <div class="card" style="border-top: 4px solid var(--gold);">
+      <div class="card-header"><span class="card-title">Dormant Members</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Joined</th><th>Name</th><th>Action</th></tr></thead>
+          <tbody>
+          {% for m in members if m.status == 'dormant' %}
+          <tr>
+            <td style="font-size:12px; color:var(--gray);">{{ m.joined_year }}</td>
+            <td style="font-weight:500;">{{ m.name }}</td>
+            <td>
+              <form method="POST" style="display:inline;">
+                <input type="hidden" name="action" value="status">
+                <input type="hidden" name="member_id" value="{{ m.id }}">
+                <select name="status" onchange="this.form.submit()" class="form-control" style="padding:4px 8px; font-size:11px; width:auto; height:28px;">
+                  <option value="active">Activate</option>
+                  <option value="dormant" selected>Dormant</option>
+                  <option value="exited">Set Left</option>
+                </select>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- LEFT MEMBERS -->
+    <div class="card" style="border-top: 4px solid #DC2626;">
+      <div class="card-header"><span class="card-title">Members Who Left</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Joined</th><th>Name</th><th>Action</th></tr></thead>
+          <tbody>
+          {% for m in members if m.status == 'exited' %}
+          <tr>
+            <td style="font-size:12px; color:var(--gray);">{{ m.joined_year }}</td>
+            <td style="font-weight:500;">{{ m.name }}</td>
+            <td>
+              <form method="POST" style="display:inline;">
+                <input type="hidden" name="action" value="status">
+                <input type="hidden" name="member_id" value="{{ m.id }}">
+                <select name="status" onchange="this.form.submit()" class="form-control" style="padding:4px 8px; font-size:11px; width:auto; height:28px;">
+                  <option value="active">Re-activate</option>
+                  <option value="exited" selected>Left</option>
+                </select>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleEdit(id, show) {
+  const display = document.getElementById('name-display-' + id);
+  const form = document.getElementById('edit-form-' + id);
+  const icon = display.nextElementSibling;
+  
+  if (show) {
+    display.style.display = 'none';
+    form.style.display = 'flex';
+    icon.style.display = 'none';
+  } else {
+    display.style.display = 'inline';
+    form.style.display = 'none';
+    icon.style.display = 'inline';
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: real-brothers
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app

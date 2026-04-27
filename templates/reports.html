@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<h1 class="page-title">Reports</h1>
+<p class="page-sub">Financial overview for {{ year }}</p>
+
+<form method="GET" style="margin-bottom:20px; display:flex; gap:10px; align-items:center;">
+  <label class="form-label" style="margin:0;">Year:</label>
+  <select name="year" class="form-control" style="width:120px;" onchange="this.form.submit()">
+    {% for y in range(2024, 2030) %}
+    <option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+<div class="stat-grid" style="margin-bottom:24px;">
+  {% set total_paid = report | sum(attribute='total_paid') %}
+  <div class="stat-card">
+    <div class="stat-label">Total Collected</div>
+    <div class="stat-value green">KES {{ "{:,.0f}".format(total_paid) }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Monthly Target</div>
+    <div class="stat-value">KES {{ "{:,.0f}".format(total_expected_monthly) }}</div>
+    <div class="stat-sub">{{ report | selectattr('months_missed', 'gt', 0) | list | length }} members behind</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Dowry Fund Target</div>
+    <div class="stat-value">KES {{ "{:,.0f}".format(total_expected_dowry) }}</div>
+    <div class="stat-sub">{{ report | sum(attribute='dowry_paid') | int | string }} collected</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Members Fully Paid</div>
+    <div class="stat-value green">{{ report | selectattr('months_missed', 'eq', 0) | list | length }}</div>
+    <div class="stat-sub">of {{ report|length }} members</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:20px;">
+  <div class="card-header"><span class="card-title">Monthly Collection by Month</span></div>
+  <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap:8px;">
+    {% set month_names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] %}
+    {% for m in months_data %}
+    <div style="text-align:center; padding:12px 8px; background:#F7F8FA; border-radius:8px; border:1px solid #E5E7EB;">
+      <div style="font-size:11px; font-weight:600; color:#6B7280; margin-bottom:6px;">{{ month_names[m.month-1] }}</div>
+      <div style="font-size:18px; font-weight:600; color:{{ '#2D6A4F' if m.paid >= 20 else '#E76F51' }};">{{ m.paid }}</div>
+      <div style="font-size:10px; color:#9CA3AF;">paid</div>
+      {% if m.missed > 0 %}
+      <div style="font-size:10px; color:#DC2626; margin-top:2px;">{{ m.missed }} missed</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Full Member Report — {{ year }}</span>
+    <button onclick="window.print()" class="btn btn-secondary btn-sm">🖨 Print</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Name</th>
+        <th>Monthly Paid</th>
+        <th>Months Missed</th>
+        <th>Dowry Paid</th>
+        <th>Dowry Remaining</th>
+        <th>Apology Savings</th>
+        <th>Status</th>
+      </tr></thead>
+      <tbody>
+      {% for m in report %}
+      <tr>
+        <td><a href="{{ url_for('member_detail', member_id=m.id) }}" style="font-weight:500;">{{ m.name }}</a></td>
+        <td>{{ m.monthly_paid }}/{{ m.months_expected }}</td>
+        <td>
+          {% if m.months_missed > 0 %}<span class="badge badge-red">{{ m.months_missed }}</span>
+          {% else %}<span class="badge badge-green">0</span>{% endif %}
+        </td>
+        <td>KES {{ "{:,.0f}".format(m.dowry_paid) }}</td>
+        <td>
+          {% if m.dowry_remaining > 0 %}<span style="color:#C05621;">KES {{ "{:,.0f}".format(m.dowry_remaining) }}</span>
+          {% else %}<span style="color:#2D6A4F;">✓ Complete</span>{% endif %}
+        </td>
+        <td>KES {{ "{:,.0f}".format(m.apology_total) }}</td>
+        <td>
+          {% if m.months_missed == 0 and m.dowry_remaining == 0 %}
+          <span class="badge badge-green">✓ All Good</span>
+          {% elif m.months_missed > 0 %}
+          <span class="badge badge-red">Behind</span>
+          {% else %}
+          <span class="badge badge-amber">Partial</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

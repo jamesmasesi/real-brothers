@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Process Member Refund{% endblock %}
+{% block content %}
+<h1 class="page-title">Process Member Refund</h1>
+<p class="page-sub">Finalize financial exit for a member</p>
+
+<div class="card" style="max-width: 500px;">
+  <form method="POST">
+    <div class="form-group">
+      <label class="form-label">Member Leaving</label>
+      <select name="member_id" class="form-control" required>
+        <option value="">Select member...</option>
+        {% for m in members %}
+        <option value="{{ m.id }}">{{ m.name }} ({{ m.status|capitalize }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Refund Amount (KES)</label>
+      <input type="number" name="amount" class="form-control" required placeholder="Amount to return to member">
+      <small style="color:var(--gray); font-size:11px;">This will be deducted from the total group balance.</small>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Was Dowry Support Paid?</label>
+      <select name="was_dowry_paid" class="form-control">
+        <option value="no">No - Only contributions refunded</option>
+        <option value="yes">Yes - Member received full dowry support</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Reason for Exit</label>
+      <input type="text" name="reason" class="form-control" value="Member Exit Refund">
+    </div>
+
+    <div style="background:#FEE2E2; color:#DC2626; padding:12px; border-radius:8px; font-size:12px; margin-bottom:16px;">
+      <strong>Note:</strong> Processing this will mark the member as <strong>Left</strong> and record a permanent financial deduction.
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%; background:#DC2626;">Confirm Refund & Exit →</button>
+  </form>
+</div>
+{% endblock %}

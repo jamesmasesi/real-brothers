@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real Brothers – {% block title %}{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #2D6A4F;
+  --green-light: #52B788;
+  --green-pale: #D8F3DC;
+  --amber: #E76F51;
+  --amber-pale: #FDEBD0;
+  --gold: #F4A261;
+  --dark: #1B1B1B;
+  --gray: #6B7280;
+  --gray-light: #F3F4F6;
+  --border: #E5E7EB;
+  --white: #FFFFFF;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: #F7F8FA; color: var(--dark); min-height: 100vh; }
+h1, h2, h3 { font-family: 'DM Serif Display', serif; font-weight: 400; }
+a { color: var(--green); text-decoration: none; }
+a:hover { color: var(--green-light); }
+
+.navbar {
+  background: var(--dark);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky; top: 0; z-index: 100;
+}
+.navbar-brand { display: flex; align-items: center; gap: 10px; }
+.navbar-brand .logo { width: 32px; height: 32px; background: var(--green-light); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--dark); }
+.navbar-brand span { font-size: 17px; font-weight: 600; color: var(--white); letter-spacing: -0.3px; }
+.navbar-brand small { font-size: 11px; color: #9CA3AF; display: block; font-weight: 400; }
+.navbar-nav { display: flex; align-items: center; gap: 4px; }
+.nav-link { color: #9CA3AF; padding: 6px 12px; border-radius: 6px; font-size: 14px; transition: all 0.15s; white-space: nowrap; }
+.nav-link:hover, .nav-link.active { background: rgba(255,255,255,0.1); color: var(--white); }
+.nav-link.logout { color: #F87171; }
+.nav-user { font-size: 13px; color: #9CA3AF; padding: 6px 12px; }
+.nav-badge { background: var(--green-light); color: var(--dark); font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; margin-left: 4px; }
+
+.container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+.page-title { font-size: 28px; color: var(--dark); margin-bottom: 4px; }
+.page-sub { color: var(--gray); font-size: 14px; margin-bottom: 24px; }
+
+.card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 20px; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.card-title { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat-card { background: var(--white); border-radius: var(--radius); border: 1px solid var(--border); padding: 18px 20px; }
+.stat-label { font-size: 12px; font-weight: 500; color: var(--gray); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.stat-value { font-size: 26px; font-family: 'DM Serif Display', serif; color: var(--dark); }
+.stat-value.green { color: var(--green); }
+.stat-value.amber { color: var(--amber); }
+.stat-sub { font-size: 12px; color: var(--gray); margin-top: 3px; }
+
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+td { padding: 12px 12px; border-bottom: 1px solid var(--border); color: var(--dark); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--gray-light); }
+
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.badge-green { background: var(--green-pale); color: var(--green); }
+.badge-red { background: #FEE2E2; color: #DC2626; }
+.badge-amber { background: var(--amber-pale); color: #C05621; }
+.badge-gray { background: var(--gray-light); color: var(--gray); }
+.badge-gold { background: #FEF3C7; color: #92400E; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: none; font-family: 'DM Sans', sans-serif; }
+.btn-primary { background: var(--green); color: var(--white); }
+.btn-primary:hover { background: #235C40; color: var(--white); }
+.btn-secondary { background: var(--gray-light); color: var(--dark); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--border); }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+.btn-danger { background: #FEE2E2; color: #DC2626; }
+.btn-danger:hover { background: #FECACA; }
+
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 500; color: var(--dark); margin-bottom: 6px; }
+.form-control { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: 'DM Sans', sans-serif; background: var(--white); color: var(--dark); outline: none; transition: border 0.15s; }
+.form-control:focus { border-color: var(--green-light); box-shadow: 0 0 0 3px rgba(82,183,136,0.15); }
+select.form-control { cursor: pointer; }
+
+.alert { padding: 12px 16px; border-radius: var(--radius-sm); margin-bottom: 16px; font-size: 14px; }
+.alert-success { background: var(--green-pale); color: var(--green); border: 1px solid #95D5B2; }
+.alert-error { background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; }
+
+.progress-bar-wrap { background: var(--gray-light); border-radius: 4px; height: 6px; overflow: hidden; margin-top: 6px; }
+.progress-bar { height: 100%; border-radius: 4px; background: var(--green-light); transition: width 0.3s; }
+.progress-bar.amber { background: var(--gold); }
+.progress-bar.red { background: #F87171; }
+
+.avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+
+.month-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.month-dot { width: 100%; aspect-ratio: 1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
+.month-dot.paid { background: var(--green-pale); color: var(--green); }
+.month-dot.missed { background: #FEE2E2; color: #DC2626; }
+.month-dot.future { background: var(--gray-light); color: var(--gray); }
+
+@media (max-width: 640px) {
+  .navbar-nav .nav-link { padding: 6px 8px; font-size: 13px; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .hide-mobile { display: none; }
+  td, th { padding: 10px 8px; }
+}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-brand">
+    <div class="logo">
+      <img src="{{ url_for('static', filename='logo.png') }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" style="height:100%; width:100%; border-radius:8px; object-fit:cover;">
+      <div style="display:none; width:100%; height:100%; background:var(--green-light); border-radius:8px; align-items:center; justify-content:center; font-family:'DM Serif Display',serif; font-size:18px; color:var(--dark);">RB</div>
+    </div>
+    <div>
+      <span>Real Brothers</span>
+      <small>Savings Group</small>
+    </div>
+  </div>
+  {% if session.user_id %}
+  <div class="navbar-nav">
+    <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint=='dashboard' %}active{% endif %}">Dashboard</a>
+    {% if session.role == 'admin' %}
+    <a href="{{ url_for('record_payment') }}" class="nav-link {% if request.endpoint=='record_payment' %}active{% endif %}">Record</a>
+    <a href="{{ url_for('manage_members') }}" class="nav-link {% if request.endpoint=='manage_members' %}active{% endif %} hide-mobile">Members</a>
+    <a href="{{ url_for('reports') }}" class="nav-link {% if request.endpoint=='reports' %}active{% endif %} hide-mobile">Reports</a>
+    {% else %}
+    <a href="{{ url_for('member_detail', member_id=session.user_id) }}" class="nav-link">My Account</a>
+    {% endif %}
+    <span class="nav-user">{{ session.name }}</span>
+    <a href="{{ url_for('logout') }}" class="nav-link logout">Logout</a>
+  </div>
+  {% endif %}
+</nav>
+<div class="container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'success' if category=='success' else 'error' }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

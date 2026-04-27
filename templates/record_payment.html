@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Record Payment{% endblock %}
+{% block content %}
+<h1 class="page-title">Record Payment</h1>
+<p class="page-sub">Admin panel · Record contributions for members</p>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+<div>
+<div class="card">
+  <div class="card-header"><span class="card-title">New Payment</span></div>
+  <form method="POST" id="payment-form">
+    <div class="form-group">
+      <label class="form-label">Member</label>
+      <select name="member_id" class="form-control" required id="member-select">
+        <option value="">Select member...</option>
+        {% for m in members %}
+        <option value="{{ m.id }}">{{ m.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Payment Type</label>
+      <select name="payment_type" class="form-control" required id="type-select" onchange="updateForm()">
+        <option value="">Select type...</option>
+        <option value="monthly">Monthly Contribution (KES 200)</option>
+        <option value="apology">Apology Saving (KES 200)</option>
+        <option value="dowry">Annual Dowry Contribution</option>
+        <option value="fine">Fine (Late/Absent)</option>
+      </select>
+    </div>
+    <div class="form-group" id="fine-type-group" style="display:none;">
+      <label class="form-label">Fine Reason</label>
+      <select id="fine-reason" class="form-control" onchange="updateFineAmount(this.value)">
+        <option value="">Select reason...</option>
+        <option value="50">Late (KES 50)</option>
+        <option value="200">Absent (KES 200)</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Payment Date</label>
+      <input type="date" name="payment_date" class="form-control" id="payment-date-input" required>
+    </div>
+    <div class="form-group" id="month-group" style="display:none;">
+      <label class="form-label">Month</label>
+      <select name="month" class="form-control" id="month-select">
+        <option value="">Select month...</option>
+        <option value="1">January</option><option value="2">February</option>
+        <option value="3">March</option><option value="4">April</option>
+        <option value="5">May</option><option value="6">June</option>
+        <option value="7">July</option><option value="8">August</option>
+        <option value="9">September</option><option value="10">October</option>
+        <option value="11">November</option><option value="12">December</option>
+      </select>
+    </div>
+    <div class="form-group" id="amount-group" style="display:none;">
+      <label class="form-label">Amount (KES)</label>
+      <input type="number" name="amount" class="form-control" id="amount-input" placeholder="e.g. 15000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Year</label>
+      <select name="year" class="form-control">
+        {% for y in range(year, 2022, -1) %}
+        <option value="{{ y }}" {% if y==year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <input type="text" name="notes" class="form-control" placeholder="e.g. Cash received">
+    </div>
+    <div id="amount-preview" style="background:#D8F3DC; color:#2D6A4F; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-weight:500; display:none;">
+      Amount: KES <span id="preview-amount">—</span>
+    </div>
+    <button type="submit" class="btn btn-primary" style="width:100%;">Record Payment →</button>
+  </form>
+</div>
+</div>
+
+<div>
+<div class="card" style="margin-bottom:16px;">
+  <div class="card-header"><span class="card-title">Quick Reference</span></div>
+  <div style="display:flex; flex-direction:column; gap:10px;">
+    <div style="display:flex; justify-content:space-between; font-size:14px; padding:8px 0; border-bottom:1px solid #E5E7EB;">
+      <span>Monthly contribution</span><strong>KES 200</strong>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:14px; padding:8px 0; border-bottom:1px solid #E5E7EB;">
+      <span>Apology saving</span><strong>KES 200</strong>
+    </div>
+    <div style="display:flex; justify-content:space-between; font-size:14px; padding:8px 0;">
+      <span>Annual dowry</span><strong>KES {{ "{:,.0f}".format(ANNUAL_DOWRY) }}</strong>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-header"><span class="card-title">Instructions</span></div>
+  <div style="font-size:13px; color:#6B7280; line-height:1.7;">
+    <p style="margin-bottom:8px;"><strong style="color:#1B1B1B;">Monthly:</strong> Select the member and month. System prevents duplicate monthly payments.</p>
+    <p style="margin-bottom:8px;"><strong style="color:#1B1B1B;">Apology:</strong> When a member apologizes, KES 200 is added to their personal savings.</p>
+    <p><strong style="color:#1B1B1B;">Dowry:</strong> Annual contribution of KES 15,000. Can be paid in installments.</p>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+function updateForm() {
+  const type = document.getElementById('type-select').value;
+  const monthGroup = document.getElementById('month-group');
+  const amountGroup = document.getElementById('amount-group');
+  const fineGroup = document.getElementById('fine-type-group');
+  const preview = document.getElementById('amount-preview');
+  const previewAmt = document.getElementById('preview-amount');
+  const amountInput = document.getElementById('amount-input');
+  
+  monthGroup.style.display = type === 'monthly' ? 'block' : 'none';
+  amountGroup.style.display = (type === 'dowry' || type === 'fine') ? 'block' : 'none';
+  fineGroup.style.display = type === 'fine' ? 'block' : 'none';
+  
+  if (type === 'monthly') {
+    preview.style.display = 'block';
+    previewAmt.textContent = '200';
+    amountInput.value = 200;
+  } else if (type === 'apology') {
+    preview.style.display = 'block';
+    previewAmt.textContent = '200';
+    amountInput.value = 200;
+  } else if (type === 'dowry') {
+    amountInput.value = 15000;
+    preview.style.display = 'block';
+    previewAmt.textContent = '15,000';
+  } else if (type === 'fine') {
+    preview.style.display = 'none';
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+function updateFineAmount(val) {
+  const amountInput = document.getElementById('amount-input');
+  if (val && val !== 'other') {
+    amountInput.value = val;
+  }
+}
+
+// Auto-select current month and date
+const now = new Date();
+document.getElementById('month-select').value = now.getMonth() + 1;
+document.getElementById('payment-date-input').valueAsDate = now;
+</script>
+{% endblock %}

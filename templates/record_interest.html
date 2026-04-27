@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Record Interest{% endblock %}
+{% block content %}
+<h1 class="page-title">Record Interest Income</h1>
+<div class="card" style="max-width: 500px;">
+  <form method="POST">
+    <div class="form-group">
+      <label class="form-label">Amount (KES)</label>
+      <input type="number" name="amount" class="form-control" required placeholder="e.g. 500">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input type="text" name="description" class="form-control" value="FD Interest Earned">
+    </div>
+    <button type="submit" class="btn btn-primary" style="width:100%;">Record Interest →</button>
+  </form>
+</div>
+{% endblock %}

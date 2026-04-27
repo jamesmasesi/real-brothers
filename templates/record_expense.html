@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Record Expense{% endblock %}
+{% block content %}
+<h1 class="page-title">Record Expense</h1>
+<div class="card" style="max-width: 500px;">
+  <form method="POST">
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <select name="category" class="form-control" required onchange="toggleMember(this.value)">
+        <option value="Admin">Admin Expense</option>
+        <option value="Bank Fee">Bank Fee</option>
+        <option value="Meeting">Meeting Cost</option>
+        <option value="Dowry Payout">Dowry Payout (to Member)</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="form-group" id="member-group" style="display:none;">
+      <label class="form-label">Member (for Payout)</label>
+      <select name="member_id" class="form-control">
+        <option value="">Select member...</option>
+        {% for m in members %}
+        <option value="{{ m.id }}">{{ m.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Amount (KES)</label>
+      <input type="number" name="amount" class="form-control" required placeholder="e.g. 15000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input type="text" name="description" class="form-control" placeholder="e.g. Paid to member for dowry">
+    </div>
+    <button type="submit" class="btn btn-primary" style="width:100%;">Record Expense →</button>
+  </form>
+</div>
+<script>
+function toggleMember(val) {
+  document.getElementById('member-group').style.display = val === 'Dowry Payout' ? 'block' : 'none';
+}
+</script>
+{% endblock %}
