@@ -23,7 +23,8 @@ db = SQLAlchemy(app)
 # Constants
 GROUP_START_YEAR = 2023
 MONTHLY_CONTRIBUTION = 200
-APOLOGY_SAVING = 200
+LATE_FEE = 50
+ABSENT_FEE = 200
 ANNUAL_DOWRY = 15000
 
 # --- MODELS ---
@@ -161,8 +162,15 @@ def get_member_stats(member_id, year=None):
     
     for y in range(2023, 2031):
         y_total = db.session.query(db.func.sum(Payment.amount)).filter_by(member_id=member_id, year=y).scalar() or 0
-        y_monthly = Payment.query.filter_by(member_id=member_id, payment_type='monthly', year=y).count()
-        yearly_data[y] = {'total': y_total, 'monthly_count': y_monthly}
+        
+        # Get paid months for this year
+        paid_months = [p.month for p in Payment.query.filter_by(member_id=member_id, payment_type='monthly', year=y).all()]
+        
+        yearly_data[y] = {
+            'total': y_total, 
+            'monthly_count': len(paid_months),
+            'paid_months': paid_months
+        }
         if y <= now.year:
             chart_labels.append(str(y))
             chart_values.append(y_total)

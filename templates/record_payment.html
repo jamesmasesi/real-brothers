@@ -114,7 +114,7 @@ function updateForm() {
   const amountInput = document.getElementById('amount-input');
   
   monthGroup.style.display = type === 'monthly' ? 'block' : 'none';
-  amountGroup.style.display = (type === 'dowry' || type === 'fine') ? 'block' : 'none';
+  amountGroup.style.display = (type === 'dowry' || type === 'fine' || type === 'monthly' || type === 'apology') ? 'block' : 'none';
   fineGroup.style.display = type === 'fine' ? 'block' : 'none';
   
   if (type === 'monthly') {

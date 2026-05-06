@@ -76,10 +76,12 @@
       <div class="stat-label">Total Contributed</div>
       <div style="font-size:18px; font-weight:600;">KES {{ "{:,.0f}".format(user_stats.total_paid) }}</div>
     </div>
+    {% if user_stats.status == 'exited' %}
     <div>
       <div class="stat-label">Refunds/Payouts</div>
       <div style="font-size:18px; font-weight:600; color:#DC2626;">KES {{ "{:,.0f}".format(user_stats.total_refunded) }}</div>
     </div>
+    {% endif %}
     <div>
       <div class="stat-label">Net Position</div>
       <div style="font-size:18px; font-weight:600; color:var(--green);">KES {{ "{:,.0f}".format(user_stats.net_position) }}</div>

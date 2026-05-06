@@ -89,10 +89,20 @@
       <span>{{ year }}</span>
       {% if year == 2026 %}<small style="color:var(--green); font-size:10px;">CURRENT</small>{% endif %}
     </div>
-    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
+    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:10px;">
       <span style="color:var(--gray);">Monthly:</span>
       <span style="font-weight:600;">{{ data.monthly_count }}/12</span>
     </div>
+    
+    <!-- Month Grid -->
+    <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap:4px; margin-bottom:12px;">
+      {% for m_idx in range(1, 13) %}
+        <div title="{{ ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m_idx-1] }}"
+             style="height:8px; border-radius:2px; background: {{ 'var(--green)' if m_idx in data.paid_months else '#E5E7EB' }};">
+        </div>
+      {% endfor %}
+    </div>
+
     <div style="display:flex; justify-content:space-between; font-size:12px;">
       <span style="color:var(--gray);">Year Total:</span>
       <span style="font-weight:600; color:var(--green);">KES {{ "{:,.0f}".format(data.total) }}</span>
