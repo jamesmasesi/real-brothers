@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Manage Admins{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Manage Administrators</h1>
+    <p class="page-sub">Create and manage administrative accounts</p>
+</div>
+
+<div class="card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">Add New Administrator</h3>
+    </div>
+    <form method="POST">
+        <input type="hidden" name="action" value="add">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" name="name" class="form-control" required placeholder="e.g. John Doe">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-control" required placeholder="johnd">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control" required placeholder="••••••••">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-control">
+                    <option value="admin">Admin</option>
+                    <option value="super_admin">Super Admin</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Admin Account</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Existing Administrators</h3>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Role</th>
+                    <th>Last Login</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for admin in admins %}
+                <tr>
+                    <td>{{ admin.name }}</td>
+                    <td><code>{{ admin.username }}</code></td>
+                    <td>
+                        <span class="badge {% if admin.role == 'super_admin' %}badge-red{% else %}badge-amber{% endif %}">
+                            {{ admin.role | upper }}
+                        </span>
+                    </td>
+                    <td>{{ admin.last_login.strftime('%Y-%m-%d %H:%M') if admin.last_login else 'Never' }}</td>
+                    <td>
+                        {% if admin.id != session.user_id %}
+                        <form method="POST" style="display: inline;" onsubmit="return confirm('Delete this admin account?');">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="member_id" value="{{ admin.id }}">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                        {% else %}
+                        <span class="badge badge-gray">Current User</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

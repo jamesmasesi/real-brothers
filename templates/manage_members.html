@@ -51,9 +51,9 @@
       <div class="card-header"><span class="card-title">Active Members</span></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Joined</th><th>Name</th><th>Status Action</th><th>Special</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Joined</th><th>Name</th><th>Role</th><th>Status Action</th><th>Special</th><th>Actions</th></tr></thead>
           <tbody>
-          {% for m in members if m.status == 'active' %}
+          {% for m in members if m.status == 'active' and m.role == 'member' %}
           <tr>
             <td style="font-size:12px; color:var(--gray);">{{ m.joined_year }}</td>
             <td style="font-weight:500;">
@@ -67,6 +67,7 @@
                 <button type="button" onclick="toggleEdit({{ m.id }}, false)" class="btn btn-sm btn-secondary" style="padding:2px 6px; font-size:10px;">✕</button>
               </form>
             </td>
+            <td><span class="badge badge-gray">{{ m.role }}</span></td>
             <td>
               <form method="POST" style="display:inline;">
                 <input type="hidden" name="action" value="status">

@@ -1,131 +1,47 @@
 import os
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
+from flask_migrate import Migrate
 from werkzeug.utils import secure_filename
 from functools import wraps
 
+from config import Config
+from models import db, Member, Payment, Transaction, Expense, FixedDeposit, MemberRefund, Attendance, AuditLog, LoginHistory
+from rbac import login_required, admin_required, super_admin_required, role_required
+
 app = Flask(__name__)
-app.secret_key = 'realbrothers2024secretkey'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///realbrothers.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'static/uploads/profiles'
-app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # 2MB Limit
+app.config.from_object(Config)
+
+db.init_app(app)
+migrate = Migrate(app, db)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-db = SQLAlchemy(app)
+# Constants from Config
+GROUP_START_YEAR = Config.GROUP_START_YEAR
+MONTHLY_CONTRIBUTION = Config.MONTHLY_CONTRIBUTION
+LATE_FEE = Config.LATE_FEE
+ABSENT_FEE = Config.ABSENT_FEE
+ANNUAL_DOWRY = Config.ANNUAL_DOWRY
 
-# Constants
-GROUP_START_YEAR = 2023
-MONTHLY_CONTRIBUTION = 200
-LATE_FEE = 50
-ABSENT_FEE = 200
-ANNUAL_DOWRY = 15000
-
-# --- MODELS ---
-
-class Member(db.Model):
-    __tablename__ = 'members'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), default='member') # admin, member
-    status = db.Column(db.String(20), default='active') # active, dormant, suspended, exited
-    is_special = db.Column(db.Boolean, default=False)
-    phone = db.Column(db.String(20))
-    profile_pic = db.Column(db.String(255), default='default_profile.png')
-    joined_year = db.Column(db.Integer, default=GROUP_START_YEAR)
-    joined_date = db.Column(db.DateTime, default=datetime.utcnow)
-    dowry_received = db.Column(db.Integer, default=0)
-    dowry_queue_position = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    # Relationships
-    payments = db.relationship('Payment', backref='member', lazy=True, cascade="all, delete-orphan")
-    fds = db.relationship('FixedDeposit', backref='member', lazy=True)
-    refunds = db.relationship('MemberRefund', backref='member', lazy=True)
-    attendances = db.relationship('Attendance', backref='member', lazy=True)
-
-class Payment(db.Model):
-    __tablename__ = 'payments'
-    id = db.Column(db.Integer, primary_key=True)
-    member_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
-    payment_type = db.Column(db.String(50), nullable=False) # monthly, apology, dowry, fine
-    amount = db.Column(db.Float, nullable=False)
-    month = db.Column(db.Integer)
-    year = db.Column(db.Integer)
-    notes = db.Column(db.String(200))
-    recorded_by = db.Column(db.Integer)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-class Transaction(db.Model):
-    __tablename__ = 'transactions'
-    id = db.Column(db.Integer, primary_key=True)
-    type = db.Column(db.String(20), nullable=False) # Income, Expense, Refund
-    category = db.Column(db.String(50)) # monthly, dowry_payout, interest, etc.
-    amount = db.Column(db.Float, nullable=False)
-    description = db.Column(db.String(200))
-    reference_id = db.Column(db.Integer) # ID of the specific record (Payment ID, Expense ID, etc.)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
-class Expense(db.Model):
-    __tablename__ = 'expenses'
-    id = db.Column(db.Integer, primary_key=True)
-    category = db.Column(db.String(50), nullable=False) # Dowry Payout, Admin, Bank Fee, Meeting
-    amount = db.Column(db.Float, nullable=False)
-    member_id = db.Column(db.Integer, db.ForeignKey('members.id')) # If payout to member
-    description = db.Column(db.Text)
-    date = db.Column(db.DateTime, default=datetime.utcnow)
-
-class FixedDeposit(db.Model):
-    __tablename__ = 'fixed_deposits'
-    id = db.Column(db.Integer, primary_key=True)
-    member_id = db.Column(db.Integer, db.ForeignKey('members.id'))
-    principal_amount = db.Column(db.Float, nullable=False)
-    interest_earned = db.Column(db.Float, default=0.0)
-    status = db.Column(db.String(20), default='Active') # Active, Matured
-    start_date = db.Column(db.DateTime, default=datetime.utcnow)
-
-class MemberRefund(db.Model):
-    __tablename__ = 'member_refunds'
-    id = db.Column(db.Integer, primary_key=True)
-    member_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
-    amount = db.Column(db.Float, nullable=False)
-    reason = db.Column(db.String(200))
-    date = db.Column(db.DateTime, default=datetime.utcnow)
-
-class Attendance(db.Model):
-    __tablename__ = 'attendance'
-    id = db.Column(db.Integer, primary_key=True)
-    member_id = db.Column(db.Integer, db.ForeignKey('members.id'), nullable=False)
-    date = db.Column(db.Date, default=datetime.utcnow().date())
-    status = db.Column(db.String(20)) # Present, Absent, Late
-    fine_amount = db.Column(db.Float, default=0.0)
+# Helper for Audit Logging
+def log_action(member_id, action, details=None):
+    log = AuditLog(
+        member_id=member_id,
+        action=action,
+        details=details,
+        ip_address=request.remote_addr,
+        user_agent=request.user_agent.string
+    )
+    db.session.add(log)
+    db.session.commit()
 
 # --- HELPERS ---
 
-def login_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if 'user_id' not in session: return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated
-
-def admin_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if 'user_id' not in session: return redirect(url_for('login'))
-        if session.get('role') != 'admin':
-            flash('Admin access required.', 'error')
-            return redirect(url_for('dashboard'))
-        return f(*args, **kwargs)
-    return decorated
+# (get_financial_summary and get_member_stats remain here as they are app-specific logic)
 
 def get_financial_summary():
     total_income = db.session.query(db.func.sum(Transaction.amount)).filter(Transaction.type == 'Income').scalar() or 0
@@ -239,15 +155,54 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        user = Member.query.filter_by(username=request.form['username'].strip()).first()
-        if user and check_password_hash(user.password, request.form['password']):
-            session.update({'user_id': user.id, 'name': user.name, 'role': user.role})
-            return redirect(url_for('dashboard'))
-        flash('Invalid credentials')
+        username = request.form['username'].strip()
+        password = request.form['password']
+        user = Member.query.filter_by(username=username).first()
+        
+        if user:
+            # Check lockout
+            from rbac import check_account_locked, increment_failed_attempts, reset_failed_attempts
+            is_locked, message = check_account_locked(user)
+            if is_locked:
+                flash(message, 'error')
+                return render_template('login.html')
+            
+            if user.check_password(password):
+                reset_failed_attempts(user)
+                session.update({'user_id': user.id, 'name': user.name, 'role': user.role})
+                
+                # Log login
+                history = LoginHistory(member_id=user.id, username=username, success=True, 
+                                       ip_address=request.remote_addr, user_agent=request.user_agent.string)
+                db.session.add(history)
+                db.session.commit()
+                
+                return redirect(url_for('dashboard'))
+            else:
+                is_locked, message = increment_failed_attempts(user)
+                flash('Invalid credentials. ' + message, 'error')
+                
+                # Log failed login
+                history = LoginHistory(member_id=user.id, username=username, success=False, 
+                                       ip_address=request.remote_addr, user_agent=request.user_agent.string,
+                                       reason='Invalid Password')
+                db.session.add(history)
+                db.session.commit()
+        else:
+            flash('Invalid credentials')
+            # Log unknown user login attempt
+            history = LoginHistory(username=username, success=False, 
+                                   ip_address=request.remote_addr, user_agent=request.user_agent.string,
+                                   reason='User Not Found')
+            db.session.add(history)
+            db.session.commit()
+            
     return render_template('login.html')
 
 @app.route('/logout')
 def logout():
+    if 'user_id' in session:
+        log_action(session['user_id'], 'Logout')
     session.clear()
     return redirect(url_for('login'))
 
@@ -451,6 +406,62 @@ def manage_members():
     members = Member.query.order_by(Member.name).all()
     return render_template('manage_members.html', members=members)
 
+@app.route('/admin/manage-admins', methods=['GET', 'POST'])
+@super_admin_required
+def manage_admins():
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'add':
+            name = request.form['name'].strip()
+            uname = request.form['username'].strip().lower()
+            role = request.form.get('role', 'admin')
+            
+            if Member.query.filter_by(username=uname).first():
+                flash(f'Error: Username "{uname}" is already taken.', 'error')
+            else:
+                new_admin = Member(name=name, username=uname, role=role)
+                new_admin.set_password(request.form.get('password', 'admin123'))
+                db.session.add(new_admin)
+                db.session.commit()
+                log_action(session['user_id'], f'Created Admin: {uname}', f'Role: {role}')
+                flash(f'Admin {name} created successfully', 'success')
+        
+        elif action == 'delete':
+            mid = request.form.get('member_id')
+            if int(mid) == session['user_id']:
+                flash('You cannot delete yourself!', 'error')
+            else:
+                m = Member.query.get(mid)
+                if m:
+                    uname = m.username
+                    db.session.delete(m)
+                    db.session.commit()
+                    log_action(session['user_id'], f'Deleted Admin: {uname}')
+                    flash('Admin deleted successfully', 'success')
+
+    admins = Member.query.filter(Member.role.in_(['admin', 'super_admin'])).all()
+    return render_template('manage_admins.html', admins=admins)
+
+@app.route('/admin/audit-logs')
+@super_admin_required
+def audit_logs():
+    logs = AuditLog.query.order_by(AuditLog.timestamp.desc()).limit(100).all()
+    return render_template('audit_logs.html', logs=logs)
+
+@app.route('/admin/login-history')
+@super_admin_required
+def login_history():
+    history = LoginHistory.query.order_by(LoginHistory.timestamp.desc()).limit(100).all()
+    return render_template('login_history.html', history=history)
+
+@app.route('/admin/settings', methods=['GET', 'POST'])
+@super_admin_required
+def settings():
+    if request.method == 'POST':
+        # Handle group settings updates here if needed
+        flash('Settings updated (simulated)', 'success')
+    return render_template('settings.html')
+
 @app.route('/member/<int:member_id>')
 @login_required
 def member_detail(member_id):
@@ -491,9 +502,12 @@ def upload_profile():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-        if not Member.query.filter_by(username='admin').first():
-            admin = Member(name='Admin', username='admin', password=generate_password_hash('admin123'), role='admin')
-            db.session.add(admin)
+        # Create default super_admin if it doesn't exist
+        if not Member.query.filter_by(role='super_admin').first():
+            super_admin = Member(name='Super Admin', username='admin', role='super_admin')
+            super_admin.set_password('admin123')
+            db.session.add(super_admin)
             db.session.commit()
+            print("Default super_admin created: admin / admin123")
     port = int(os.environ.get('PORT', 5000))
     app.run(debug=False, host='0.0.0.0', port=port)

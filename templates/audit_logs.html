@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Audit Logs{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Audit Logs</h1>
+    <p class="page-sub">System-wide activity tracking</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Recent Activities</h3>
+        <a href="{{ url_for('login_history') }}" class="btn btn-secondary btn-sm">View Login History</a>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Details</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ log.member.name if log.member else 'System' }}</td>
+                    <td><span class="badge badge-green">{{ log.action }}</span></td>
+                    <td><small>{{ log.details or '-' }}</small></td>
+                    <td><code>{{ log.ip_address }}</code></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
