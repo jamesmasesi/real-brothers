@@ -2,7 +2,13 @@
 {% block title %}Manage Members{% endblock %}
 {% block content %}
 <h1 class="page-title">Manage Members</h1>
-<p class="page-sub">{{ members|length }} total registrations</p>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+  <p class="page-sub" style="margin:0;">{{ members|length }} total registrations</p>
+  <div style="display:flex; gap:10px;">
+    <input type="text" id="memberSearch" placeholder="Search members..." class="form-control" style="width:250px; height:36px;">
+    <a href="{{ url_for('financials') }}" class="btn btn-primary btn-sm">Financials</a>
+  </div>
+</div>
 
 <div style="display:grid; grid-template-columns:1fr 2fr; gap:24px; align-items:start;">
   <!-- ADD MEMBER FORM -->
@@ -166,6 +172,20 @@
 </div>
 
 <script>
+document.getElementById('memberSearch').addEventListener('keyup', function() {
+  const searchTerm = this.value.toLowerCase();
+  const rows = document.querySelectorAll('tbody tr');
+  
+  rows.forEach(row => {
+    const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+    if (name.includes(searchTerm)) {
+      row.style.display = '';
+    } else {
+      row.style.display = 'none';
+    }
+  });
+});
+
 function toggleEdit(id, show) {
   const display = document.getElementById('name-display-' + id);
   const form = document.getElementById('edit-form-' + id);

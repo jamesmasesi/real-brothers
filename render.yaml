@@ -4,3 +4,18 @@ services:
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
+    disk:
+      name: real-brothers-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: SQLALCHEMY_DATABASE_URI
+        value: sqlite:////data/realbrothers.db
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GROUP_START_YEAR
+        value: 2023
+      - key: MONTHLY_CONTRIBUTION
+        value: 200
+      - key: ANNUAL_CONTRIBUTION
+        value: 15000

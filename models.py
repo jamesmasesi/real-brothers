@@ -40,6 +40,10 @@ class Member(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password, password)
 
+    def has_permission(self, permission):
+        from role_permissions import has_feature
+        return has_feature(self.role, permission)
+
 class Payment(db.Model):
     __tablename__ = 'payments'
     id = db.Column(db.Integer, primary_key=True)

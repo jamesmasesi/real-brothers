@@ -96,24 +96,20 @@ Deploy to Railway.app (free tier works for 24 members):
 
 ---
 
-## Member Accounts
+## 🚀 Live Features (Update 2026)
 
-Each member gets:
-- **Username:** set by admin (e.g., "johnk")
-- **Password:** set by admin (default: brothers2024)
-- **Access:** Read-only view of group dashboard + their own detailed account
-
-Members CAN:
-- View the group dashboard (totals, who's next for dowry)
-- View their own payment history and status
-- See the monthly payment tracker calendar
-
-Members CANNOT:
-- Record payments (admin only)
-- See other members' details beyond the summary table
-- Add/remove members
+The app has been upgraded for live group management:
+- **📊 Detailed Member Reports:** Export full yearly reports to CSV for external audits.
+- **🔍 Member Search:** Instantly filter members by name in the management panel.
+- **🔐 Enhanced Security:** Account lockout protection and personalized password changes.
+- **📱 Responsive Dashboard:** Optimized for both mobile and desktop viewing.
+- **🖼️ Profile Pictures:** Members can now upload their own profile photos.
+- **💍 Automation:** Automatic eligibility tracking for dowry support based on contribution history.
 
 ---
+
+## 🔐 Security & Roles
+...
 
 ## Database
 

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0;">Meeting Attendance</h2>
+        <a href="{{ url_for('dashboard') }}" style="color:var(--gray); text-decoration:none;">&larr; Back</a>
+    </div>
+
+    <form method="POST" class="card" style="padding:20px;">
+        <div style="margin-bottom:20px; display:flex; align-items:center; gap:10px;">
+            <label for="date" style="font-weight:600;">Meeting Date:</label>
+            <input type="date" id="date" name="date" value="{{ today.strftime('%Y-%m-%d') }}" 
+                   style="padding:8px; border:1px solid #E5E7EB; border-radius:6px; font-family:inherit;">
+        </div>
+
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse;">
+                <thead>
+                    <tr style="text-align:left; border-bottom:2px solid #F3F4F6;">
+                        <th style="padding:12px 8px;">Member</th>
+                        <th style="padding:12px 8px;">Status</th>
+                        <th style="padding:12px 8px;">Fine (Optional)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in members %}
+                    <tr style="border-bottom:1px solid #F3F4F6;">
+                        <td style="padding:12px 8px;">
+                            <div style="font-weight:600;">{{ m.name }}</div>
+                            <div style="font-size:12px; color:var(--gray);">@{{ m.username }}</div>
+                        </td>
+                        <td style="padding:12px 8px;">
+                            <select name="status_{{ m.id }}" style="padding:6px; border-radius:4px; border:1px solid #D1D5DB; width:120px;">
+                                <option value="Present">Present</option>
+                                <option value="Late">Late</option>
+                                <option value="Absent">Absent</option>
+                                <option value="Apology">Apology</option>
+                            </select>
+                        </td>
+                        <td style="padding:12px 8px;">
+                            <div style="display:flex; align-items:center; gap:4px;">
+                                <span style="font-size:12px; color:var(--gray);">KES</span>
+                                <input type="number" name="fine_{{ m.id }}" value="0" step="50" min="0"
+                                       style="padding:6px; border-radius:4px; border:1px solid #D1D5DB; width:80px;">
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top:30px; text-align:right;">
+            <button type="submit" class="btn btn-primary" style="padding:12px 24px;">Save Attendance</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

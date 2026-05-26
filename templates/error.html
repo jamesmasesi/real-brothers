@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Error {{ error_code }}{% endblock %}
+{% block content %}
+<div style="text-align: center; padding: 100px 20px;">
+    <div style="font-size: 80px; font-family: 'DM Serif Display', serif; color: var(--green);">{{ error_code }}</div>
+    <h1 class="page-title">{{ message }}</h1>
+    <p class="page-sub">Sorry, something went wrong or the page does not exist.</p>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary" style="margin-top: 20px;">Return to Dashboard</a>
+</div>
+{% endblock %}

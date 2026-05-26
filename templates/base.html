@@ -134,16 +134,17 @@ select.form-control { cursor: pointer; }
     <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint=='dashboard' %}active{% endif %}">Dashboard</a>
     {% if session.role in ['admin', 'super_admin'] %}
     <a href="{{ url_for('record_payment') }}" class="nav-link {% if request.endpoint=='record_payment' %}active{% endif %}">Record</a>
+    <a href="{{ url_for('attendance') }}" class="nav-link {% if request.endpoint=='attendance' %}active{% endif %}">Attendance</a>
     <a href="{{ url_for('manage_members') }}" class="nav-link {% if request.endpoint=='manage_members' %}active{% endif %} hide-mobile">Members</a>
+    <a href="{{ url_for('financials') }}" class="nav-link {% if request.endpoint=='financials' %}active{% endif %} hide-mobile">Financials</a>
     <a href="{{ url_for('reports') }}" class="nav-link {% if request.endpoint=='reports' %}active{% endif %} hide-mobile">Reports</a>
     {% endif %}
     {% if session.role == 'super_admin' %}
     <a href="{{ url_for('manage_admins') }}" class="nav-link {% if request.endpoint=='manage_admins' %}active{% endif %} hide-mobile">Admins</a>
     <a href="{{ url_for('audit_logs') }}" class="nav-link {% if request.endpoint=='audit_logs' %}active{% endif %} hide-mobile">Audit</a>
     {% endif %}
-    {% if session.role == 'member' %}
     <a href="{{ url_for('member_detail', member_id=session.user_id) }}" class="nav-link">My Account</a>
-    {% endif %}
+    <a href="{{ url_for('change_password') }}" class="nav-link" title="Settings">⚙️</a>
     <span class="nav-user">{{ session.name }}<span class="nav-badge">{{ session.role }}</span></span>
     <a href="{{ url_for('logout') }}" class="nav-link logout">Logout</a>
   </div>
